@@ -1,3 +1,6 @@
 <Solution>
-  <Project Path="Vacatia.Domain/Vacatia.Domain.csproj" />
+  <Project Path="../../../../../../DESARROLLO/Vacatia/Vacatia.Api/Vacatia.Api.csproj" Id="65549306-2549-456d-bc6e-d10fbf29b28a" />
+  <Project Path="../../../../../../DESARROLLO/Vacatia/Vacatia.Application/Vacatia.Application.csproj" />
+  <Project Path="../../../../../../DESARROLLO/Vacatia/Vacatia.Domain/Vacatia.Domain.csproj" />
+  <Project Path="../../../../../../DESARROLLO/Vacatia/Vacatia.Infraestructure/Vacatia.Infraestructure.csproj" />
 </Solution>
