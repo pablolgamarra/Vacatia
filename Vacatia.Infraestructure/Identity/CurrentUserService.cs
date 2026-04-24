@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Vacatia.Application.Common;
+using System.Security.Claims;
+using Vacatia.Application.Common.Interfaces;
 
 namespace Vacatia.Infraestructure.Identity
 {
@@ -20,16 +21,40 @@ namespace Vacatia.Infraestructure.Identity
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public string UserId => throw new NotImplementedException();
+        private ClaimsPrincipal User =>
+            _httpContextAccessor.HttpContext?.User ?? 
+                throw new InvalidOperationException("No hay contexto HTTP o el usuario no está autenticado.");
 
-        public string Email => throw new NotImplementedException();
+        /// <summary>
+        /// Object ID de Azure AD — identificador único del usuario.
+        /// Usar 'oid' y NO 'sub', ya que 'sub' cambia por aplicación.
+        /// </summary>
+        public string UserId =>
+            User.FindFirst("oid")?.Value
+            ?? User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value
+            ?? throw new InvalidOperationException("Claim 'oid' no encontrado en el token.");
+        
 
-        public string Nombre => throw new NotImplementedException();
+        public string Email => 
+            User.FindFirst("upn")?.Value 
+            ?? User.FindFirst(ClaimTypes.Email)?.Value 
+            ?? User.FindFirst("preferred_username")?.Value 
+            ?? string.Empty;
 
-        public string TenantId => throw new NotImplementedException();
+        public string Nombre =>
+            User.FindFirst("name")?.Value 
+            ?? User.FindFirst(ClaimTypes.Name)?.Value 
+            ?? string.Empty;
 
-        public bool EsAprobador => throw new NotImplementedException();
+        public string TenantId =>
+            User.FindFirst("tid")?.Value
+            ?? User.FindFirst("http://schemas.microsoft.com/identity/claims/tenantid")?.Value
+            ?? throw new InvalidOperationException("Claim 'tid' no encontrado en el token.");
 
-        public bool EsAdmin => throw new NotImplementedException();
+        public bool EsAprobador =>
+            User.IsInRole("Aprobador") || User.IsInRole("Manager");
+
+        public bool EsAdmin =>
+             User.IsInRole("Admin") || User.IsInRole("RRHH");
     }
 }

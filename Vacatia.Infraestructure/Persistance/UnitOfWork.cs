@@ -1,4 +1,4 @@
-﻿using Vacatia.Application.Common;
+﻿using Vacatia.Application.Common.Interfaces;
 
 namespace Vacatia.Infraestructure.Persistance
 {

@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using Vacatia.Application.Common;
+using Vacatia.Application.Common.Interfaces;
 using Vacatia.Application.DTOs;
 using Vacatia.Domain.Entities;
 using Vacatia.Domain.Enums;

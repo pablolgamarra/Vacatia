@@ -1,4 +1,4 @@
-﻿namespace Vacatia.Application.Common
+﻿namespace Vacatia.Application.Common.Interfaces
 {
     public interface IUnitOfWork
     {

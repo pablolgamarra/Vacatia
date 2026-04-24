@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Vacatia.Application.Common
+﻿namespace Vacatia.Application.Common.Interfaces
 {
     public interface ICurrentUserService
     {
