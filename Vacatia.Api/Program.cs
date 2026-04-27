@@ -1,4 +1,11 @@
+using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Identity.Web;
+using Microsoft.OpenApi;
+using Vacatia.Api.Middleware;
+using Vacatia.Application.Features.Solicitudes.Commands.CrearSolicitud;
+using Vacatia.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,33 +33,62 @@ builder.Services.AddInfraestructure(builder.Configuration);
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(CrearSolicitudHandler).Assembly));
 
 // FluentValidation
-builder.Services.AddValidatorFromAssembly(typeof(CrearSolicitudValidator).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(CrearSolicitudValidator).Assembly);
 
 // Pipeline de validaciónn automático en MediatR
-builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidatorBehavior<,>));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 // ─── API ──────────────────────────────────────────────────────────────────
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builders.Services.AddSwaggerGen(c => { 
+builder.Services.AddSwaggerGen(c => { 
+    c.SwaggerDoc("v1", new() { Title="Vacatia API", Version="v1" });
 
+    // Configurar autenticacion Bearer en Swagger
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+
+    c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("bearer", document)] = []
+    });
 });
-// Add services to the container.
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// CORS para SPFx/Sharepoint
+builder.Services.AddCors(opt =>
+{
+    opt.AddPolicy("SPFxPolicy", policy =>
+    {
+        policy.WithOrigins(builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? ["https://*.sharepoint.com"])
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
+// Logging estructurado (base para Application Insights)
+builder.Logging.AddConsole();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+
+// Pipeline de middleware personalizados
+app.UseMiddleware<ExceptionMiddleware>(); //Manejo global de excepciones con formato consistente
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
+app.UseCors("SPFxPolicy");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
